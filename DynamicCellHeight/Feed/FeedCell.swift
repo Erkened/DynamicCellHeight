@@ -25,12 +25,14 @@ class FeedCell: UICollectionViewCell {
         let titleLabel = UILabel()
         titleLabel.numberOfLines = 0
         titleLabel.textAlignment = .center
+        titleLabel.setContentCompressionResistancePriority(1000, for: UILayoutConstraintAxis.vertical) // Required to make sure the text is not compressed by autolayout
         return titleLabel
     }()
     
     fileprivate lazy var imageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleAspectFill // Make sure we fill the image as much as possible
+        imageView.clipsToBounds = true // Cut whatever goes beyond the bounds of the imageview
         imageView.setContentCompressionResistancePriority(250, for: UILayoutConstraintAxis.vertical)
         imageView.setContentHuggingPriority(250, for: UILayoutConstraintAxis.vertical)
         return imageView
@@ -40,7 +42,13 @@ class FeedCell: UICollectionViewCell {
         super.init(frame: frame)
         backgroundColor = UIColor.orange
         contentView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        imageHeightConstraint = imageView.heightAnchor.constraint(lessThanOrEqualToConstant: imageHeight) // Less than or equal is required to make sure that imageview takes the least space possible once UILayoutFittingCompressedSize is called
+        // Less than or equal is required to make sure that imageview takes the least space possible once UILayoutFittingCompressedSize is called
+        //imageHeightConstraint = imageView.heightAnchor.constraint(lessThanOrEqualToConstant: imageHeight)
+
+        // If instead you want to set an exact height, you need to decrease the priority of the imageHeightConstraint in order not to clash with the system supplied UIView-Encapsulated-Layout-Height constraint which always takes precedence.
+        imageHeightConstraint = imageView.heightAnchor.constraint(equalToConstant: imageHeight)
+        imageHeightConstraint.priority = 999
+        
         addSubviewsAndSetupContraints()
     }
     
@@ -77,7 +85,8 @@ extension FeedCell: AutoLayoutType{
         
         NSLayoutConstraint.useAndActivate([
             titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor), // Set the topAnchor
-            titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor)
+            titleLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor),
+            titleLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor)
             ])
         
         NSLayoutConstraint.useAndActivate([
